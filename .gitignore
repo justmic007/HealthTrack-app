@@ -1,0 +1,79 @@
+# See https://www.dartlang.org/guides/libraries/private-files
+
+# Files and directories created by pub
+.dart_tool/
+.packages
+build/
+**/build/
+# Remove the following pattern if you wish to check in your lock file
+pubspec.lock
+
+# Conventional directory for build outputs
+dist/
+
+# Directory created by dartdoc
+doc/api/
+
+# Don't commit generated files
+*.g.dart
+*.freezed.dart
+*.gen.dart
+
+# Flutter/Dart/Pub related
+**/Flutter/.last_build_id
+**/Flutter/App.framework/
+**/Flutter/Flutter.framework/
+**/Flutter/Generated.xcconfig
+**/Flutter/app.flx
+**/Flutter/app.zip
+**/Flutter/flutter_assets/
+**/Flutter/flutter_export_environment.sh
+**/Flutter/Generated/
+**/Flutter/ui.versions.json
+**/ServiceDefinitions.json
+
+# Android related
+**/Android/.gradle/
+**/Android/local.properties
+**/Android/generated/
+**/Android/Generated/
+**/Android/.idea/
+**/Android/*/build/
+**/Android/*/production/
+**/Android/app/*.apk
+**/Android/app/*.aab
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# iOS related
+**/iOS/.generated/
+**/iOS/Flutter/App.framework/
+**/iOS/Flutter/Flutter.framework/
+**/iOS/Flutter/Generated/
+**/iOS/Flutter/flutter_export_environment.sh
+**/iOS/ServiceDefinitions.json
+**/iOS/Runner/Generated/
+ios/Flutter/.last_build_id
+ios/Flutter/App.framework/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Generated/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/Generated/
+.DS_Store
+*.swp
+profile/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+Thumbs.db
+
+# Exceptions to the ignore rules
+!**/Android/.gitignore
+!**/iOS/.gitignore
+!lib/generated_plugin_registrant.dart
