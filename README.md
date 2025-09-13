@@ -1,16 +1,28 @@
-# healthtrack_mobile
+# HealthTrack
 
-A new Flutter project.
+A production-grade health tracking mobile application built with Flutter.
+
+## Project Structure
+
+```
+lib/
+├── src/
+│   ├── data/      # Repositories, data sources, API clients
+│   ├── models/    # Data models and entities
+│   ├── providers/ # State management (BLoC, Riverpod, etc.)
+│   ├── screens/   # UI screens and pages
+│   ├── utils/     # Utility functions and helpers
+│   └── widgets/   # Reusable UI components
+├── app.dart       # Main app configuration
+└── main.dart      # Entry point
+```
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Install dependencies: `flutter pub get`
+2. Run the app: `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
+## Platforms
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- ✅ iOS
+- ✅ Android
