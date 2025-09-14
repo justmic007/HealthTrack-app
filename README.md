@@ -43,35 +43,44 @@ Java 21 (major version 65) being used with incompatible Gradle version.
 
 ---
 
-### 🛠️ Quick Fixes
+### 🛠️ Step-by-Step Solutions
 
-#### 1. Set Java 17 (Recommended)
+#### 1. Verify and Set Java Environment
 ```bash
-# macOS
+# Check installed Java versions
+/usr/libexec/java_home -V
+
+# Set JAVA_HOME to Java 17 (recommended)
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
-# Verify
+# Verify Java version
 java -version
 ```
 
-#### 2. Clean Build Cache
+#### 2. Fix File Ownership Issues
+*(If you accidentally used sudo with gradle commands)*
 ```bash
-flutter clean
-rm -rf ~/.gradle/caches/
-rm -rf android/.gradle/
-flutter pub get
+# Fix project ownership
+sudo chown -R $(whoami) ~/.gradle/
+sudo chown -R $(whoami) ./android/
+
+# Remove lock files
+find ~/.gradle -name "*.lock" -delete
+pkill -f gradle
 ```
 
-#### 3. Update Gradle (if needed)
+#### 3. Update Gradle Configuration
 ```properties
 # In android/gradle/wrapper/gradle-wrapper.properties
 distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
 ```
 
-#### 4. Fix Permissions (if used sudo)
+#### 4. Clean and Rebuild
 ```bash
-sudo chown -R $(whoami) ~/.gradle/
-sudo chown -R $(whoami) ./android/
+flutter clean
+rm -rf ~/.gradle/caches/
+rm -rf android/.gradle/
+flutter pub get
 ```
 
 ---
