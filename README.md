@@ -31,18 +31,21 @@ lib/
 
 ### 🚨 Common Error: Java-Gradle Version Incompatibility
 
-**Symptoms:**
+#### Symptoms
 ```
 FAILURE: Build failed with an exception.
 BUG! exception in phase 'semantic analysis' in source unit 'BuildScript' 
 Unsupported class file major version 65
 ```
 
-**Root Cause:** Java 21 (major version 65) being used with incompatible Gradle version.
+#### Root Cause
+Java 21 (major version 65) being used with incompatible Gradle version.
+
+---
 
 ### 🛠️ Quick Fixes
 
-**1. Set Java 17 (Recommended)**
+#### 1. Set Java 17 (Recommended)
 ```bash
 # macOS
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
@@ -51,7 +54,7 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 java -version
 ```
 
-**2. Clean Build Cache**
+#### 2. Clean Build Cache
 ```bash
 flutter clean
 rm -rf ~/.gradle/caches/
@@ -59,45 +62,64 @@ rm -rf android/.gradle/
 flutter pub get
 ```
 
-**3. Update Gradle (if needed)**
-```bash
+#### 3. Update Gradle (if needed)
+```properties
 # In android/gradle/wrapper/gradle-wrapper.properties
 distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
 ```
 
-**4. Fix Permissions (if used sudo)**
+#### 4. Fix Permissions (if used sudo)
 ```bash
 sudo chown -R $(whoami) ~/.gradle/
 sudo chown -R $(whoami) ./android/
 ```
 
+---
+
 ### 🔧 Android Studio Setup
-1. Open Android Studio → Preferences
-2. Build Tools → Gradle → Set Gradle JVM to Java 17
+1. Open **Android Studio** → **Preferences**
+2. Navigate to **Build Tools** → **Gradle**
+3. Set **Gradle JVM** to **Java 17**
+
+---
 
 ### 📱 Running on Android
-```bash
-# Start emulator
-flutter emulators --launch Pixel_6
 
-# Run app
+#### Start Emulator
+```bash
+# List available emulators
+flutter emulators
+
+# Launch emulator
+flutter emulators --launch Pixel_6
+```
+
+#### Run App
+```bash
+# Run on Android
 flutter run -d android
-# or use specific device ID
+
+# Or use specific device ID
 flutter run -d emulator-5554
 ```
 
+---
+
 ### ✅ Verification
+
 ```bash
 flutter doctor -v
 java -version  # Should show Java 17
 ./android/gradlew --version
 ```
 
-**Recommended Versions:**
-- Java 17 (OpenJDK)
-- Gradle 8.4+
-- Android Gradle Plugin 8.2.0+
-- compileSdkVersion 34
+#### Recommended Versions
+| Component | Version |
+|-----------|----------|
+| Java | 17 (OpenJDK) |
+| Gradle | 8.4+ |
+| Android Gradle Plugin | 8.2.0+ |
+| compileSdkVersion | 34 |
 
 
 
