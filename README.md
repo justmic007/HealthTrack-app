@@ -55,6 +55,7 @@ flutter run -d emulator-5554
 ```bash
 # Launch iOS Simulator
 open -a Simulator
+flutter run -d "iPhone 14 Pro Max"
 
 # OR let Flutter handle it automatically
 flutter run -d ios
