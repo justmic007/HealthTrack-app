@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (value == 'logout') {
                 await context.read<AuthProvider>().logout();
                 if (context.mounted) {
-                  Navigator.of(context).pushReplacementNamed('/login');
+                  context.go('/login');
                 }
               }
             },
