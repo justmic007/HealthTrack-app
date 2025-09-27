@@ -143,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final user = authProvider.currentUser;
           
           return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

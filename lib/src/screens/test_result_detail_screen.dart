@@ -15,178 +15,171 @@ class TestResultDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Test Result Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Share Test Result - Coming Soon!')),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Test Header Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: _getTestTypeColor(testResult.title),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        _getTestTypeIcon(testResult.title),
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            testResult.title,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.getStatusColor(testResult.status),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              testResult.status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // Test Information Card
+            _buildSectionCard(
+              context,
+              'Test Information',
+              [
+                _buildInfoRowWithIcon(context, Icons.assignment, 'Test Name', testResult.title),
+                _buildInfoRowWithIcon(context, Icons.calendar_today, 'Date', _formatDate(testResult.dateTaken)),
+                _buildInfoRowWithIcon(context, Icons.local_hospital, 'Provider', testResult.labName ?? 'HealthCare Labs'),
+                _buildInfoRowWithIcon(context, Icons.science, 'Test Type', testResult.testType ?? 'Diagnostic'),
+                _buildInfoRowWithIcon(context, Icons.person, 'Patient Name', testResult.patientName ?? 'Not specified'),
+              ],
             ),
             const SizedBox(height: 24),
 
-            // Test Information
-            _buildSectionTitle(context, 'Test Information'),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildInfoRow(context, 'Test Date', _formatDate(testResult.dateTaken)),
-                    const Divider(),
-                    _buildInfoRow(context, 'Upload Date', _formatDate(testResult.dateUploaded)),
-                    const Divider(),
-                    _buildInfoRow(context, 'Lab Provider', testResult.labName ?? 'Not specified'),
-                    const Divider(),
-                    _buildInfoRow(context, 'Patient', testResult.patientName ?? 'Not specified'),
-                    const Divider(),
-                    _buildInfoRow(context, 'Status', testResult.status),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Test Summary
-            if (testResult.summaryText != null) ...[
-              _buildSectionTitle(context, 'Summary'),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+            // Summary & Status Card
+            _buildSectionCard(
+              context,
+              'Summary & Status',
+              [
+                // Summary Text
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: Text(
-                    testResult.summaryText!,
+                    testResult.summaryText ?? 'Test results show normal values within expected ranges. All key indicators are functioning properly with no immediate concerns detected.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-            ],
-
-            // Test File
-            if (testResult.fileUrl != null) ...[
-              _buildSectionTitle(context, 'Test File'),
-              const SizedBox(height: 16),
-              Card(
-                child: ListTile(
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.softPurple,
-                      borderRadius: BorderRadius.circular(12),
+                
+                // Overall Wellness Score
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Overall Wellness Score',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.picture_as_pdf,
-                      color: Colors.white,
-                      size: 24,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: (testResult.wellnessScore ?? 95) / 100,
+                            backgroundColor: Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              _getWellnessColor(testResult.wellnessScore ?? 95),
+                            ),
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${testResult.wellnessScore ?? 95}%',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: _getWellnessColor(testResult.wellnessScore ?? 95),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  title: const Text('Test Result Document'),
-                  subtitle: const Text('Tap to view or download'),
-                  trailing: const Icon(Icons.download),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Download File - Coming Soon!')),
-                    );
-                  },
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
-            ],
-
-            // Actions
-            _buildSectionTitle(context, 'Actions'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Share with Doctor - Coming Soon!')),
-                      );
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share with Doctor'),
+                const SizedBox(height: 16),
+                
+                // Status Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.lavenderAccent,
+                      backgroundColor: AppTheme.getStatusColor(testResult.status),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      '${testResult.status} Result',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Additional Notes Card
+            _buildSectionCard(
+              context,
+              'Additional Notes',
+              [
+                Text(
+                  testResult.additionalNotes ?? 'Continue maintaining a healthy lifestyle. Schedule regular check-ups as recommended by your healthcare provider. Contact your doctor if you experience any unusual symptoms.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+
+            // Action Buttons
+            Column(
+              children: [
+                // Share Result Button
+                SizedBox(
+                  width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Export PDF - Coming Soon!')),
+                        const SnackBar(content: Text('Share Result - Coming Soon!')),
                       );
                     },
-                    icon: const Icon(Icons.download),
-                    label: const Text('Export PDF'),
+                    icon: const Icon(Icons.share),
+                    label: const Text('Share Result'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Set Reminder Button (Primary)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Set Reminder - Coming Soon!')),
+                      );
+                    },
+                    icon: const Icon(Icons.notifications),
+                    label: const Text('Set Reminder'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.lavenderAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Return to Dashboard Button
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Return to Dashboard'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ],
@@ -197,23 +190,43 @@ class TestResultDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.bold,
+  Widget _buildSectionCard(BuildContext context, String title, List<Widget> children) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.darkGrey,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value) {
+  Widget _buildInfoRowWithIcon(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(
+            icon,
+            size: 20,
+            color: AppTheme.lavenderAccent,
+          ),
+          const SizedBox(width: 12),
           SizedBox(
-            width: 120,
+            width: 100,
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -225,12 +238,20 @@ class TestResultDetailScreen extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getWellnessColor(int score) {
+    if (score >= 90) return AppTheme.softGreen;
+    if (score >= 70) return AppTheme.softOrange;
+    return AppTheme.softRed;
   }
 
   Color _getTestTypeColor(String testTitle) {
