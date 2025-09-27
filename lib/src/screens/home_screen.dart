@@ -55,6 +55,65 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppTheme.lavenderAccent,
         foregroundColor: Colors.white,
         actions: [
+          // Notification Bell
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Notifications - Coming Soon!')),
+                  );
+                },
+              ),
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.softRed,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: const Text(
+                    '3',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Profile Avatar
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final user = authProvider.currentUser;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppTheme.softPink,
+                  child: Text(
+                    user?.fullName?.split(' ').map((name) => name[0]).take(2).join('') ?? 'U',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          // Logout Menu
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'logout') {
@@ -88,191 +147,265 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Welcome Section
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppTheme.softPink,
-                          child: Text(
-                            user?.fullName?.split(' ').map((name) => name[0]).take(2).join('') ?? 'U',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search tests or conditions...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Search functionality - Coming Soon!')),
+                      );
+                    },
+                  ),
+                ),
+
+                // Welcome Section with Date
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome ${user?.fullName?.split(' ').first ?? 'User'}!',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome back,',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              Text(
-                                user?.fullName ?? 'User',
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                      ),
+                      Text(
+                        _getCurrentDate(),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.darkGrey.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Your Health Snapshot
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Your Health Snapshot',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildSnapshotCard(
+                          context,
+                          'Active Alerts',
+                          Icons.warning_amber,
+                          '2',
+                          'Requires attention',
+                          AppTheme.softRed,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildSnapshotCard(
+                          context,
+                          'Appointments',
+                          Icons.calendar_today,
+                          '3',
+                          'Upcoming next week',
+                          AppTheme.softPurple,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+
+
+                // Your Recent Test Results
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Your Recent Test Results',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _isLoadingData
+                      ? const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        )
+                      : _recentTests.isEmpty
+                          ? Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.assignment, size: 48, color: Colors.grey),
+                                    const SizedBox(height: 8),
+                                    Text('No test results yet', style: Theme.of(context).textTheme.bodyLarge),
+                                    Text('Upload your first test result to get started', 
+                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                                         textAlign: TextAlign.center),
+                                  ],
                                 ),
                               ),
-                              if (user?.email != null)
-                                Text(
-                                  user!.email,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
+                            )
+                          : Column(
+                              children: _recentTests.map((test) => Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      // Test Type Icon
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: _getTestTypeColor(test.title),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          _getTestTypeIcon(test.title),
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Test Details
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              test.title,
+                                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _formatDate(test.dateTaken),
+                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                color: AppTheme.darkGrey.withOpacity(0.7),
+                                              ),
+                                            ),
+                                            Text(
+                                              test.labName ?? 'Lab Provider',
+                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                color: AppTheme.darkGrey.withOpacity(0.7),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Status and Result
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.getStatusColor(test.status),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              test.status,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _getResultValue(test.status),
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.getStatusColor(test.status),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Quick Actions
-                Text(
-                  'Quick Actions',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  children: [
-                    _buildActionCard(
-                      context,
-                      'Test Results',
-                      Icons.assignment,
-                      AppTheme.softGreen,
-                      () => _navigateToTestResults(context),
-                    ),
-                    _buildActionCard(
-                      context,
-                      'Reminders',
-                      Icons.alarm,
-                      AppTheme.softOrange,
-                      () => _navigateToReminders(context),
-                    ),
-                    _buildActionCard(
-                      context,
-                      'Share Results',
-                      Icons.share,
-                      AppTheme.softPurple,
-                      () => _navigateToSharing(context),
-                    ),
-                    _buildActionCard(
-                      context,
-                      'Profile',
-                      Icons.person,
-                      AppTheme.lavenderAccent,
-                      () => _navigateToProfile(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Recent Test Results
-                Text(
-                  'Recent Test Results',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                _isLoadingData
-                    ? const Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                      )
-                    : _recentTests.isEmpty
-                        ? Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.assignment, size: 48, color: Colors.grey),
-                                  const SizedBox(height: 8),
-                                  Text('No test results yet', style: Theme.of(context).textTheme.bodyLarge),
-                                  Text('Upload your first test result to get started', 
-                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                                       textAlign: TextAlign.center),
-                                ],
-                              ),
+                              )).toList(),
                             ),
-                          )
-                        : Column(
-                            children: _recentTests.map((test) => Card(
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: AppTheme.getStatusColor(test.status),
-                                  child: const Icon(Icons.assignment, color: Colors.white, size: 20),
-                                ),
-                                title: Text(test.title),
-                                subtitle: Text('${test.labName ?? 'Lab'} • ${_formatDate(test.dateTaken)}'),
-                                trailing: Chip(
-                                  label: Text(test.status, style: const TextStyle(fontSize: 12)),
-                                  backgroundColor: AppTheme.getStatusColor(test.status).withOpacity(0.2),
-                                ),
-                              ),
-                            )).toList(),
-                          ),
+                ),
                 const SizedBox(height: 24),
 
                 // Upcoming Reminders
-                Text(
-                  'Upcoming Reminders',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Upcoming Reminders',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 
-                _upcomingReminders.isEmpty
-                    ? Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.alarm, size: 48, color: Colors.grey),
-                              const SizedBox(height: 8),
-                              Text('No upcoming reminders', style: Theme.of(context).textTheme.bodyLarge),
-                              Text('Set reminders for medications or appointments', 
-                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                                   textAlign: TextAlign.center),
-                            ],
-                          ),
-                        ),
-                      )
-                    : Column(
-                        children: _upcomingReminders.map((reminder) => Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.getReminderTypeColor(reminder.reminderType),
-                              child: Icon(_getReminderIcon(reminder.reminderType), color: Colors.white, size: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _upcomingReminders.isEmpty
+                      ? Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.alarm, size: 48, color: Colors.grey),
+                                const SizedBox(height: 8),
+                                Text('No upcoming reminders', style: Theme.of(context).textTheme.bodyLarge),
+                                Text('Set reminders for medications or appointments', 
+                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                                     textAlign: TextAlign.center),
+                              ],
                             ),
-                            title: Text(reminder.title),
-                            subtitle: Text('${reminder.description ?? ''} • ${_formatDateTime(reminder.dueDateTime)}'),
-                            trailing: const Icon(Icons.chevron_right),
                           ),
-                        )).toList(),
-                      ),
+                        )
+                      : Column(
+                          children: _upcomingReminders.map((reminder) => Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppTheme.getReminderTypeColor(reminder.reminderType),
+                                child: Icon(_getReminderIcon(reminder.reminderType), color: Colors.white, size: 20),
+                              ),
+                              title: Text(reminder.title),
+                              subtitle: Text('${reminder.description ?? ''} • ${_formatDateTime(reminder.dueDateTime)}'),
+                              trailing: const Icon(Icons.chevron_right),
+                            ),
+                          )).toList(),
+                        ),
+                ),
               ],
             ),
           );
@@ -342,7 +475,88 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Removed - now using AppTheme.getStatusColor()
+  // Helper methods for enhanced dashboard
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    final months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${months[now.month - 1]} ${now.day}, ${now.year}';
+  }
+
+  Widget _buildSnapshotCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    String count,
+    String subtitle,
+    Color color,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  count,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.darkGrey.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getTestTypeColor(String testTitle) {
+    if (testTitle.toLowerCase().contains('cholesterol')) return AppTheme.softPurple;
+    if (testTitle.toLowerCase().contains('blood')) return AppTheme.softRed;
+    if (testTitle.toLowerCase().contains('glucose')) return AppTheme.softOrange;
+    return AppTheme.softGreen;
+  }
+
+  IconData _getTestTypeIcon(String testTitle) {
+    if (testTitle.toLowerCase().contains('cholesterol')) return Icons.favorite;
+    if (testTitle.toLowerCase().contains('blood')) return Icons.bloodtype;
+    if (testTitle.toLowerCase().contains('glucose')) return Icons.local_hospital;
+    return Icons.assignment;
+  }
+
+  String _getResultValue(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'reviewed':
+        return 'Normal';
+      case 'pending':
+        return 'Pending';
+      case 'failed':
+      case 'needs attention':
+        return 'High';
+      default:
+        return 'Borderline';
+    }
+  }
 
   IconData _getReminderIcon(String type) {
     switch (type.toLowerCase()) {
