@@ -12,6 +12,9 @@ class TestResult {
   final String? labName;
   final String? patientName;
   final String? patientEmail;
+  final String? testType;
+  final int? wellnessScore;
+  final String? additionalNotes;
 
   TestResult({
     required this.id,
@@ -27,6 +30,9 @@ class TestResult {
     this.labName,
     this.patientName,
     this.patientEmail,
+    this.testType,
+    this.wellnessScore,
+    this.additionalNotes,
   });
 
   factory TestResult.fromJson(Map<String, dynamic> json) {
@@ -44,6 +50,9 @@ class TestResult {
       labName: json['lab_name'],
       patientName: json['patient_name'],
       patientEmail: json['patient_email'],
+      testType: json['test_type'],
+      wellnessScore: json['wellness_score'],
+      additionalNotes: json['additional_notes'],
     );
   }
 }

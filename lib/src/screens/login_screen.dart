@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../utils/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -128,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: authProvider.isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppTheme.lavenderAccent,
                         foregroundColor: Colors.white,
                       ),
                       child: authProvider.isLoading

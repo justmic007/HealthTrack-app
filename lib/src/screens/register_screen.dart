@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../utils/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -51,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Register'),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppTheme.lavenderAccent,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
@@ -188,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: authProvider.isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppTheme.lavenderAccent,
                         foregroundColor: Colors.white,
                       ),
                       child: authProvider.isLoading
