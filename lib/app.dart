@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'src/providers/auth_provider.dart';
+import 'src/providers/test_results_provider.dart';
 import 'src/utils/app_router.dart';
 import 'src/utils/app_theme.dart';
 
@@ -12,6 +13,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => TestResultsProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
