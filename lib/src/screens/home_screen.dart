@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../data/api_client.dart';
+import '../utils/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,8 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HealthTrack'),
-        backgroundColor: Colors.blue,
+        title: const Text('HealthTrack - Dashboard'),
+        backgroundColor: AppTheme.lavenderAccent,
         foregroundColor: Colors.white,
         actions: [
           PopupMenuButton<String>(
@@ -93,10 +94,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 30,
-                          backgroundColor: Colors.blue,
-                          child: Icon(Icons.person, size: 30, color: Colors.white),
+                          backgroundColor: AppTheme.softPink,
+                          child: Text(
+                            user?.fullName?.split(' ').map((name) => name[0]).take(2).join('') ?? 'U',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -149,28 +157,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       'Test Results',
                       Icons.assignment,
-                      Colors.green,
+                      AppTheme.softGreen,
                       () => _navigateToTestResults(context),
                     ),
                     _buildActionCard(
                       context,
                       'Reminders',
                       Icons.alarm,
-                      Colors.orange,
+                      AppTheme.softOrange,
                       () => _navigateToReminders(context),
                     ),
                     _buildActionCard(
                       context,
                       'Share Results',
                       Icons.share,
-                      Colors.purple,
+                      AppTheme.softPurple,
                       () => _navigateToSharing(context),
                     ),
                     _buildActionCard(
                       context,
                       'Profile',
                       Icons.person,
-                      Colors.blue,
+                      AppTheme.lavenderAccent,
                       () => _navigateToProfile(context),
                     ),
                   ],
@@ -213,14 +221,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: _recentTests.map((test) => Card(
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: _getStatusColor(test.status),
-                                  child: Icon(Icons.assignment, color: Colors.white, size: 20),
+                                  backgroundColor: AppTheme.getStatusColor(test.status),
+                                  child: const Icon(Icons.assignment, color: Colors.white, size: 20),
                                 ),
                                 title: Text(test.title),
                                 subtitle: Text('${test.labName ?? 'Lab'} • ${_formatDate(test.dateTaken)}'),
                                 trailing: Chip(
-                                  label: Text(test.status, style: TextStyle(fontSize: 12)),
-                                  backgroundColor: _getStatusColor(test.status).withOpacity(0.1),
+                                  label: Text(test.status, style: const TextStyle(fontSize: 12)),
+                                  backgroundColor: AppTheme.getStatusColor(test.status).withOpacity(0.2),
                                 ),
                               ),
                             )).toList(),
@@ -256,12 +264,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: _upcomingReminders.map((reminder) => Card(
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: AppTheme.getReminderTypeColor(reminder.reminderType),
                               child: Icon(_getReminderIcon(reminder.reminderType), color: Colors.white, size: 20),
                             ),
                             title: Text(reminder.title),
                             subtitle: Text('${reminder.description ?? ''} • ${_formatDateTime(reminder.dueDateTime)}'),
-                            trailing: Icon(Icons.chevron_right),
+                            trailing: const Icon(Icons.chevron_right),
                           ),
                         )).toList(),
                       ),
@@ -334,18 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'failed':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  // Removed - now using AppTheme.getStatusColor()
 
   IconData _getReminderIcon(String type) {
     switch (type.toLowerCase()) {

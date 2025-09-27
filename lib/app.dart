@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'src/providers/auth_provider.dart';
 import 'src/utils/app_router.dart';
+import 'src/utils/app_theme.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -18,10 +19,7 @@ class MyApp extends StatelessWidget {
           
           return MaterialApp.router(
             title: 'HealthTrack',
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-              useMaterial3: true,
-            ),
+            theme: AppTheme.lightTheme,
             routerConfig: router,
           );
         },
