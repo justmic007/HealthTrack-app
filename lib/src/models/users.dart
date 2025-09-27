@@ -17,12 +17,12 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      email: json['email'],
-      fullName: json['full_name'],
-      userType: json['user_type'],
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      fullName: json['full_name'] ?? '',
+      userType: json['user_type'] ?? 'patient',
       phoneNumber: json['phone_number'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 
@@ -89,8 +89,8 @@ class Token {
 
   factory Token.fromJson(Map<String, dynamic> json) {
     return Token(
-      accessToken: json['access_token'],
-      tokenType: json['token_type'],
+      accessToken: json['access_token'] ?? '',
+      tokenType: json['token_type'] ?? 'bearer',
     );
   }
 }
