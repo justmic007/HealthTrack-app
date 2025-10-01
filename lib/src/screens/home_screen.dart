@@ -6,6 +6,7 @@ import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../data/api_client.dart';
 import '../utils/app_theme.dart';
+import 'upload_test_result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -410,6 +411,30 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           );
+        },
+      ),
+      floatingActionButton: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          final user = authProvider.currentUser;
+          
+          // Only show upload button for active lab users
+          if (user?.userType == 'lab' && user?.isActive == true) {
+            return FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const UploadTestResultScreen(),
+                  ),
+                );
+              },
+              backgroundColor: AppTheme.lavenderAccent,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Upload Test'),
+            );
+          }
+          
+          return const SizedBox.shrink();
         },
       ),
     );
