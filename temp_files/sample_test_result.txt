@@ -1,0 +1,17 @@
+SAMPLE MEDICAL TEST RESULT
+==========================
+
+Patient: John Doe
+Date: October 1, 2024
+Test Type: Blood Panel
+
+Results:
+- Glucose: 95 mg/dL (Normal)
+- Cholesterol: 180 mg/dL (Normal)
+- Blood Pressure: 120/80 (Normal)
+
+Status: NORMAL
+Doctor: Dr. Smith
+Lab: HealthTrack Lab
+
+This is a sample test result file for testing the file picker functionality.
