@@ -15,6 +15,8 @@ class TestResult {
   final String? testType;
   final int? wellnessScore;
   final String? additionalNotes;
+  final String? uploadedBy;
+  final String? uploaderName;
 
   TestResult({
     required this.id,
@@ -33,6 +35,8 @@ class TestResult {
     this.testType,
     this.wellnessScore,
     this.additionalNotes,
+    this.uploadedBy,
+    this.uploaderName,
   });
 
   factory TestResult.fromJson(Map<String, dynamic> json) {
@@ -53,6 +57,8 @@ class TestResult {
       testType: json['test_type'],
       wellnessScore: json['wellness_score'],
       additionalNotes: json['additional_notes'],
+      uploadedBy: json['uploaded_by'],
+      uploaderName: json['uploader_name'],
     );
   }
 }
