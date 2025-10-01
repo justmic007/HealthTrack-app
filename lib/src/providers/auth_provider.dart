@@ -26,6 +26,7 @@ class AuthProvider extends ChangeNotifier {
       
       // Get user data after successful login
       _currentUser = await _apiClient.getCurrentUser();
+      
       _setLoading(false);
       return true;
     } catch (e) {

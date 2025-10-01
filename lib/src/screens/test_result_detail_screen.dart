@@ -31,6 +31,8 @@ class TestResultDetailScreen extends StatelessWidget {
                 _buildInfoRowWithIcon(context, Icons.local_hospital, 'Provider', testResult.labName ?? 'HealthCare Labs'),
                 _buildInfoRowWithIcon(context, Icons.science, 'Test Type', testResult.testType ?? 'Diagnostic'),
                 _buildInfoRowWithIcon(context, Icons.person, 'Patient Name', testResult.patientName ?? 'Not specified'),
+                if (testResult.uploaderName != null)
+                  _buildInfoRowWithIcon(context, Icons.upload, 'Uploaded By', testResult.uploaderName!),
               ],
             ),
             const SizedBox(height: 24),

@@ -4,6 +4,7 @@ class User {
   final String fullName;
   final String userType;
   final String? phoneNumber;
+  final bool isActive;
   final DateTime createdAt;
 
   User({
@@ -12,6 +13,7 @@ class User {
     required this.fullName,
     required this.userType,
     this.phoneNumber,
+    required this.isActive,
     required this.createdAt,
   });
 
@@ -22,6 +24,7 @@ class User {
       fullName: json['full_name'] ?? '',
       userType: json['user_type'] ?? 'patient',
       phoneNumber: json['phone_number'],
+      isActive: json['is_active'] ?? true,
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
@@ -33,6 +36,7 @@ class User {
       'full_name': fullName,
       'user_type': userType,
       'phone_number': phoneNumber,
+      'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
     };
   }

@@ -6,6 +6,7 @@ import '../models/users.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../utils/network_utils.dart';
+import '../utils/api_exception.dart';
 
 class ApiClient {
   // Environment-based configuration
@@ -59,7 +60,17 @@ class ApiClient {
         throw Exception('Failed to parse login response: $e');
       }
     } else {
-      throw Exception('Login failed: ${response.body}');
+      // Extract user-friendly error message
+      String errorMessage = 'Login failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {
+        // If JSON parsing fails, use default message
+      }
+      throw ApiException(errorMessage, statusCode: response.statusCode);
     }
   }
 
@@ -74,7 +85,17 @@ class ApiClient {
     if (response.statusCode == 201) {
       return User.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Registration failed: ${response.body}');
+      // Extract user-friendly error message
+      String errorMessage = 'Registration failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {
+        // If JSON parsing fails, use default message
+      }
+      throw ApiException(errorMessage, statusCode: response.statusCode);
     }
   }
 
