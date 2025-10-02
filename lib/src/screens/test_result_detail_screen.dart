@@ -131,7 +131,7 @@ class TestResultDetailScreen extends StatelessWidget {
             Column(
               children: [
                 // Download File Button (if file exists)
-                if (testResult.fileUrl != null) ..[
+                if (testResult.fileUrl != null) ...[
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -217,9 +217,11 @@ class TestResultDetailScreen extends StatelessWidget {
   Widget _buildSectionCard(BuildContext context, String title, List<Widget> children) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -227,7 +229,7 @@ class TestResultDetailScreen extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppTheme.darkGrey,
+                color: AppTheme.lavenderAccent,
               ),
             ),
             const SizedBox(height: 16),
@@ -240,8 +242,9 @@ class TestResultDetailScreen extends StatelessWidget {
 
   Widget _buildInfoRowWithIcon(BuildContext context, IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
@@ -249,22 +252,25 @@ class TestResultDetailScreen extends StatelessWidget {
             color: AppTheme.lavenderAccent,
           ),
           const SizedBox(width: 12),
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: AppTheme.darkGrey.withOpacity(0.7),
-              ),
-            ),
-          ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -272,73 +278,32 @@ class TestResultDetailScreen extends StatelessWidget {
     );
   }
 
-  Color _getWellnessColor(int score) {
-    if (score >= 90) return AppTheme.softGreen;
-    if (score >= 70) return AppTheme.softOrange;
-    return AppTheme.softRed;
-  }
-
-  Color _getTestTypeColor(String testTitle) {
-    if (testTitle.toLowerCase().contains('cholesterol')) return AppTheme.softPurple;
-    if (testTitle.toLowerCase().contains('blood')) return AppTheme.softRed;
-    if (testTitle.toLowerCase().contains('glucose')) return AppTheme.softOrange;
-    return AppTheme.softGreen;
-  }
-
-  IconData _getTestTypeIcon(String testTitle) {
-    if (testTitle.toLowerCase().contains('cholesterol')) return Icons.favorite;
-    if (testTitle.toLowerCase().contains('blood')) return Icons.bloodtype;
-    if (testTitle.toLowerCase().contains('glucose')) return Icons.local_hospital;
-    return Icons.assignment;
-  }
-
   String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Color _getWellnessColor(int score) {
+    if (score >= 80) return Colors.green;
+    if (score >= 60) return Colors.orange;
+    return Colors.red;
   }
 
   Future<void> _downloadFile(BuildContext context, String fileUrl) async {
     try {
-      // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              ),
-              SizedBox(width: 12),
-              Text('Downloading file...'),
-            ],
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      // Launch the file URL - this will open in browser or download
-      final Uri uri = Uri.parse(fileUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final Uri url = Uri.parse(fileUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to download file'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('Could not open file')),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error downloading file: $e')),
         );
       }
     }

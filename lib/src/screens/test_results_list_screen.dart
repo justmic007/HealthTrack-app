@@ -171,7 +171,7 @@ class _TestResultsListScreenState extends State<TestResultsListScreen> {
       if (_searchQuery.isNotEmpty) {
         final matchesSearch = result.title.toLowerCase().contains(_searchQuery) ||
             (result.labName?.toLowerCase().contains(_searchQuery) ?? false) ||
-            result.summaryText.toLowerCase().contains(_searchQuery);
+            (result.summaryText?.toLowerCase().contains(_searchQuery) ?? false);
         if (!matchesSearch) return false;
       }
 
@@ -273,10 +273,10 @@ class _TestResultsListScreenState extends State<TestResultsListScreen> {
               ),
               
               // Summary (if available)
-              if (testResult.summaryText.isNotEmpty) ...[
+              if (testResult.summaryText?.isNotEmpty == true) ...[
                 const SizedBox(height: 12),
                 Text(
-                  testResult.summaryText,
+                  testResult.summaryText!,
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 14,
