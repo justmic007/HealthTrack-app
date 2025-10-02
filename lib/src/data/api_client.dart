@@ -6,6 +6,7 @@ import '../models/users.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../models/labs.dart';
+import '../models/analytics.dart';
 import '../utils/network_utils.dart';
 import '../utils/api_exception.dart';
 
@@ -289,6 +290,27 @@ class ApiClient {
       return User.fromJson(jsonDecode(response.body));
     } else {
       String errorMessage = 'Failed to update user status';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<SystemAnalytics> getSystemAnalytics() async {
+    final url = await baseUrl;
+    final response = await http.get(
+      Uri.parse('$url/auth/admin/analytics'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return SystemAnalytics.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Failed to get system analytics';
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['detail'] != null) {

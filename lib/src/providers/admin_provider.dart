@@ -2,17 +2,20 @@ import 'package:flutter/foundation.dart';
 import '../data/api_client.dart';
 import '../models/labs.dart';
 import '../models/users.dart';
+import '../models/analytics.dart';
 
 class AdminProvider with ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
   
   List<Lab> _pendingLabs = [];
   List<User> _inactiveUsers = [];
+  SystemAnalytics? _analytics;
   bool _isLoading = false;
   String? _error;
 
   List<Lab> get pendingLabs => _pendingLabs;
   List<User> get inactiveUsers => _inactiveUsers;
+  SystemAnalytics? get analytics => _analytics;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -29,6 +32,19 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+  Future<void> loadAllData() async {
+    _setLoading(true);
+    try {
+      await Future.wait([
+        loadPendingLabs(),
+        loadInactiveUsers(),
+        loadAnalytics(),
+      ]);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> loadInactiveUsers() async {
     _setLoading(true);
     try {
@@ -37,6 +53,19 @@ class AdminProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       print('Error loading inactive users: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> loadAnalytics() async {
+    _setLoading(true);
+    try {
+      _analytics = await _apiClient.getSystemAnalytics();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      print('Error loading analytics: $e');
     } finally {
       _setLoading(false);
     }
