@@ -528,16 +528,44 @@ class ApiClient {
 
   Future<List<TestResult>> getSharedResults() async {
     final url = await baseUrl;
+    print('[DEBUG] Getting shared results from: $url/sharing/shared-with-me');
+    
     final response = await http.get(
       Uri.parse('$url/sharing/shared-with-me'),
       headers: await _getHeaders(),
     );
 
+    print('[DEBUG] Shared results response status: ${response.statusCode}');
+    print('[DEBUG] Shared results response body: ${response.body}');
+
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
+      print('[DEBUG] Found ${data.length} shared results');
       return data.map((json) => TestResult.fromJson(json)).toList();
     } else {
       String errorMessage = 'Failed to get shared results';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<List<Share>> getMyShares() async {
+    final url = await baseUrl;
+    final response = await http.get(
+      Uri.parse('$url/sharing/my-shares'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Share.fromJson(json)).toList();
+    } else {
+      String errorMessage = 'Failed to get sharing history';
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['detail'] != null) {

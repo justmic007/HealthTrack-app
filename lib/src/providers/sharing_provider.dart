@@ -7,11 +7,13 @@ class SharingProvider extends ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
   
   List<TestResult> _sharedResults = [];
+  List<Share> _myShares = [];
   bool _isLoading = false;
   String? _errorMessage;
 
   // Getters
   List<TestResult> get sharedResults => _sharedResults;
+  List<Share> get myShares => _myShares;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -35,11 +37,28 @@ class SharingProvider extends ChangeNotifier {
 
   // Load shared results (for caregivers)
   Future<void> loadSharedResults() async {
+    print('[DEBUG] SharingProvider: Loading shared results...');
     _setLoading(true);
     _clearError();
 
     try {
       _sharedResults = await _apiClient.getSharedResults();
+      print('[DEBUG] SharingProvider: Loaded ${_sharedResults.length} shared results');
+      _setLoading(false);
+    } catch (e) {
+      print('[DEBUG] SharingProvider: Error loading shared results: $e');
+      _setError(e.toString());
+      _setLoading(false);
+    }
+  }
+
+  // Load my shares (for patients)
+  Future<void> loadMyShares() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      _myShares = await _apiClient.getMyShares();
       _setLoading(false);
     } catch (e) {
       _setError(e.toString());
@@ -53,7 +72,9 @@ class SharingProvider extends ChangeNotifier {
 
     try {
       await _apiClient.revokeShare(shareId);
-      // Optionally refresh shared results if needed
+      // Remove from local list
+      _myShares.removeWhere((share) => share.id == shareId);
+      notifyListeners();
     } catch (e) {
       _setError(e.toString());
       rethrow;
