@@ -384,14 +384,54 @@ class _UploadTestResultScreenState extends State<UploadTestResultScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+      // Show options for file source
+      final source = await showModalBottomSheet<String>(
+        context: context,
+        builder: (context) => Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.folder),
+                title: const Text('Choose from Files'),
+                onTap: () => Navigator.pop(context, 'files'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Photos'),
+                onTap: () => Navigator.pop(context, 'photos'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
       );
+
+      if (source == null) return;
+
+      FilePickerResult? result;
+      
+      if (source == 'photos') {
+        // Pick from photo library
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+        );
+      } else {
+        // Pick from file system
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.any,
+          allowedExtensions: null,
+        );
+      }
       
       if (result != null) {
         setState(() {
-          _selectedFile = File(result.files.single.path!);
+          _selectedFile = File(result!.files.single.path!);
           _fileName = result.files.single.name;
         });
       }
