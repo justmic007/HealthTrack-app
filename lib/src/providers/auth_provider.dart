@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/users.dart';
+import '../models/labs.dart';
 import '../data/api_client.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -53,6 +54,59 @@ class AuthProvider extends ChangeNotifier {
       
       // Auto-login after registration
       return await login(email, password);
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Register Patient
+  Future<bool> registerPatient(PatientCreate patientData) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _apiClient.registerPatient(patientData);
+      
+      // Auto-login after registration
+      return await login(patientData.email, patientData.password);
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Register Caregiver
+  Future<bool> registerCaregiver(CaregiverCreate caregiverData) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _apiClient.registerCaregiver(caregiverData);
+      
+      // Don't auto-login for caregivers since they need admin approval
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Register Lab
+  Future<bool> registerLab(LabRegistrationRequest labData) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _apiClient.registerLab(labData);
+      
+      // Don't auto-login for labs since they need admin approval
+      _setLoading(false);
+      return true;
     } catch (e) {
       _setError(e.toString());
       _setLoading(false);

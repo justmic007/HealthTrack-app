@@ -10,6 +10,8 @@ import '../utils/app_theme.dart';
 import 'upload_test_result_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'test_results_list_screen.dart';
+import 'shared_results_screen.dart';
+import 'my_shares_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,9 +36,18 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoadingData = true);
     
     try {
-      // Load recent test results (last 3)
-      final tests = await _apiClient.getTestResults();
-      _recentTests = tests.take(3).toList();
+      final user = context.read<AuthProvider>().currentUser;
+      final isCaregiver = user?.userType == 'caregiver';
+      
+      if (isCaregiver) {
+        // Load shared results for caregivers (last 3)
+        final sharedResults = await _apiClient.getSharedResults();
+        _recentTests = sharedResults.take(3).toList();
+      } else {
+        // Load recent test results for patients/labs (last 3)
+        final tests = await _apiClient.getTestResults();
+        _recentTests = tests.take(3).toList();
+      }
       
       // Load upcoming reminders (next 3)
       final reminders = await _apiClient.getReminders();
@@ -202,13 +213,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Welcome Section with Date
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Welcome ${user?.fullName?.split(' ').first ?? 'User'}!',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        'Welcome ${_getFirstTwoNames(user?.fullName)}!',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
                           color: AppTheme.darkGrey,
                         ),
                       ),
@@ -228,12 +239,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
                     'Your Health Snapshot',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -267,35 +278,69 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 
-                // Your Recent Test Results
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'Your Recent Test Results',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const TestResultsListScreen(),
+                // Test Results Section (different for caregivers)
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    final user = authProvider.currentUser;
+                    final isCaregiver = user?.userType == 'caregiver';
+                    final isPatient = user?.userType == 'patient';
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              isCaregiver ? 'Shared Test Results' : 'Your Recent Test Results',
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          );
-                        },
-                        child: const Text('View All'),
+                          ),
+                          Row(
+                            children: [
+                              if (isPatient)
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const MySharesScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('My Shares'),
+                                ),
+                              TextButton(
+                                onPressed: () {
+                                  if (isCaregiver) {
+                                    print('[DEBUG] Navigating to SharedResultsScreen');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const SharedResultsScreen(),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const TestResultsListScreen(),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text('View All'),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
                 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -411,12 +456,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
                     'Upcoming Reminders',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -655,5 +700,14 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return '${dateTime.day}/${dateTime.month} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
+  }
+
+  String _getFirstTwoNames(String? fullName) {
+    if (fullName == null || fullName.isEmpty) return 'User';
+    final names = fullName.split(' ');
+    if (names.length >= 2) {
+      return '${names[0]} ${names[1]}';
+    }
+    return names[0];
   }
 }

@@ -76,3 +76,41 @@ class UserActivationRequest {
     return {'is_active': isActive};
   }
 }
+
+class LabRegistrationRequest {
+  final String labName;
+  final String cliaNumber;
+  final String address;
+  final String? phone;
+  final String labEmail;
+  final String? website;
+  final String userName;
+  final String userEmail;
+  final String password;
+
+  LabRegistrationRequest({
+    required this.labName,
+    required this.cliaNumber,
+    required this.address,
+    this.phone,
+    required this.labEmail,
+    this.website,
+    required this.userName,
+    required this.userEmail,
+    required this.password,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'lab_name': labName,
+      'clia_number': cliaNumber,
+      'address': address,
+      'phone': phone,
+      'lab_email': labEmail,
+      'website': website,
+      'user_name': userName,
+      'user_email': userEmail,
+      'password': password,
+    };
+  }
+}

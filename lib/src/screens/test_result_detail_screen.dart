@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/test_results.dart';
 import '../utils/app_theme.dart';
+import '../providers/auth_provider.dart';
+import 'share_test_result_screen.dart';
 
 class TestResultDetailScreen extends StatelessWidget {
   final TestResult testResult;
@@ -152,24 +155,45 @@ class TestResultDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
                 
-                // Share Result Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Share Result - Coming Soon!')),
+                // Share Result Button (only for patients)
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    final user = authProvider.currentUser;
+                    if (user?.userType == 'patient') {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ShareTestResultScreen(
+                                  testResult: testResult,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.share),
+                          label: const Text('Share Result'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       );
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share Result'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    final user = authProvider.currentUser;
+                    if (user?.userType == 'patient') {
+                      return const SizedBox(height: 12);
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
                 const SizedBox(height: 12),
                 

@@ -6,6 +6,12 @@ class User {
   final String? phoneNumber;
   final bool isActive;
   final DateTime createdAt;
+  
+  // Professional license fields
+  final String? licenseNumber;
+  final String? licenseType;
+  final String? licenseState;
+  final bool? licenseVerified;
 
   User({
     required this.id,
@@ -15,6 +21,10 @@ class User {
     this.phoneNumber,
     required this.isActive,
     required this.createdAt,
+    this.licenseNumber,
+    this.licenseType,
+    this.licenseState,
+    this.licenseVerified,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -26,6 +36,10 @@ class User {
       phoneNumber: json['phone_number'],
       isActive: json['is_active'] ?? true,
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      licenseNumber: json['license_number'],
+      licenseType: json['license_type'],
+      licenseState: json['license_state'],
+      licenseVerified: json['license_verified'],
     );
   }
 
@@ -47,8 +61,46 @@ class UserCreate {
   final String password;
   final String fullName;
   final String? phoneNumber;
+  
+  // Professional license fields
+  final String? licenseNumber;
+  final String? licenseType;
+  final String? licenseState;
 
   UserCreate({
+    required this.email,
+    required this.password,
+    required this.fullName,
+    this.phoneNumber,
+    this.licenseNumber,
+    this.licenseType,
+    this.licenseState,
+  });
+
+  Map<String, dynamic> toJson() {
+    final json = {
+      'email': email,
+      'password': password,
+      'full_name': fullName,
+      'phone_number': phoneNumber,
+    };
+    
+    // Add license fields if provided
+    if (licenseNumber != null) json['license_number'] = licenseNumber;
+    if (licenseType != null) json['license_type'] = licenseType;
+    if (licenseState != null) json['license_state'] = licenseState;
+    
+    return json;
+  }
+}
+
+class PatientCreate {
+  final String email;
+  final String password;
+  final String fullName;
+  final String? phoneNumber;
+
+  PatientCreate({
     required this.email,
     required this.password,
     required this.fullName,
@@ -61,6 +113,38 @@ class UserCreate {
       'password': password,
       'full_name': fullName,
       'phone_number': phoneNumber,
+    };
+  }
+}
+
+class CaregiverCreate {
+  final String email;
+  final String password;
+  final String fullName;
+  final String? phoneNumber;
+  final String licenseNumber;
+  final String licenseType;
+  final String licenseState;
+
+  CaregiverCreate({
+    required this.email,
+    required this.password,
+    required this.fullName,
+    this.phoneNumber,
+    required this.licenseNumber,
+    required this.licenseType,
+    required this.licenseState,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'password': password,
+      'full_name': fullName,
+      'phone_number': phoneNumber,
+      'license_number': licenseNumber,
+      'license_type': licenseType,
+      'license_state': licenseState,
     };
   }
 }
