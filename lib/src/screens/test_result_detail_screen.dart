@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/test_results.dart';
 import '../utils/app_theme.dart';
 
@@ -129,6 +131,27 @@ class TestResultDetailScreen extends StatelessWidget {
             // Action Buttons
             Column(
               children: [
+                // Download File Button (if file exists)
+                if (testResult.fileUrl != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _downloadFile(context, testResult.fileUrl!),
+                      icon: const Icon(Icons.download),
+                      label: const Text('Download Test Result File'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                
                 // Share Result Button
                 SizedBox(
                   width: double.infinity,
@@ -195,9 +218,11 @@ class TestResultDetailScreen extends StatelessWidget {
   Widget _buildSectionCard(BuildContext context, String title, List<Widget> children) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -205,7 +230,7 @@ class TestResultDetailScreen extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppTheme.darkGrey,
+                color: AppTheme.lavenderAccent,
               ),
             ),
             const SizedBox(height: 16),
@@ -218,8 +243,9 @@ class TestResultDetailScreen extends StatelessWidget {
 
   Widget _buildInfoRowWithIcon(BuildContext context, IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
@@ -227,22 +253,25 @@ class TestResultDetailScreen extends StatelessWidget {
             color: AppTheme.lavenderAccent,
           ),
           const SizedBox(width: 12),
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: AppTheme.darkGrey.withOpacity(0.7),
-              ),
-            ),
-          ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -250,29 +279,83 @@ class TestResultDetailScreen extends StatelessWidget {
     );
   }
 
-  Color _getWellnessColor(int score) {
-    if (score >= 90) return AppTheme.softGreen;
-    if (score >= 70) return AppTheme.softOrange;
-    return AppTheme.softRed;
-  }
-
-  Color _getTestTypeColor(String testTitle) {
-    if (testTitle.toLowerCase().contains('cholesterol')) return AppTheme.softPurple;
-    if (testTitle.toLowerCase().contains('blood')) return AppTheme.softRed;
-    if (testTitle.toLowerCase().contains('glucose')) return AppTheme.softOrange;
-    return AppTheme.softGreen;
-  }
-
-  IconData _getTestTypeIcon(String testTitle) {
-    if (testTitle.toLowerCase().contains('cholesterol')) return Icons.favorite;
-    if (testTitle.toLowerCase().contains('blood')) return Icons.bloodtype;
-    if (testTitle.toLowerCase().contains('glucose')) return Icons.local_hospital;
-    return Icons.assignment;
-  }
-
   String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Color _getWellnessColor(int score) {
+    if (score >= 80) return Colors.green;
+    if (score >= 60) return Colors.orange;
+    return Colors.red;
+  }
+
+  Future<void> _downloadFile(BuildContext context, String fileUrl) async {
+    try {
+      print('Original file URL: $fileUrl');
+      
+      // Construct full URL if it's a relative path
+      String fullUrl = fileUrl;
+      if (!fileUrl.startsWith('http')) {
+        // Use platform-specific IP addresses
+        if (Platform.isAndroid) {
+          fullUrl = 'http://10.0.2.2:8000$fileUrl';
+        } else {
+          // For iOS simulator, use localhost
+          fullUrl = 'http://localhost:8000$fileUrl';
+        }
+      }
+      
+      print('Full file URL: $fullUrl');
+      
+      final Uri url = Uri.parse(fullUrl);
+      print('Parsed URI: $url');
+      
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Opening file in browser...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      final canLaunch = await canLaunchUrl(url);
+      print('Can launch URL: $canLaunch');
+      
+      if (canLaunch) {
+        await launchUrl(url, mode: LaunchMode.inAppWebView);
+      } else {
+        // Try alternative launch modes
+        try {
+          await launchUrl(url, mode: LaunchMode.inAppWebView);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File opened successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e2) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File download not available in emulator. Try on a real device.'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Download error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error downloading file: $e')),
+        );
+      }
+    }
   }
 }

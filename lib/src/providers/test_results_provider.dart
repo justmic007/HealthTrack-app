@@ -14,6 +14,7 @@ class TestResultsProvider extends ChangeNotifier {
   List<TestResult> get testResults => _testResults;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get error => _errorMessage;
 
   // Load all test results
   Future<void> loadTestResults() async {
