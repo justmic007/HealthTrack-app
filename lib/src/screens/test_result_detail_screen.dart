@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/test_results.dart';
@@ -290,17 +291,66 @@ class TestResultDetailScreen extends StatelessWidget {
 
   Future<void> _downloadFile(BuildContext context, String fileUrl) async {
     try {
-      final Uri url = Uri.parse(fileUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
+      print('Original file URL: $fileUrl');
+      
+      // Construct full URL if it's a relative path
+      String fullUrl = fileUrl;
+      if (!fileUrl.startsWith('http')) {
+        // Use platform-specific IP addresses
+        if (Platform.isAndroid) {
+          fullUrl = 'http://10.0.2.2:8000$fileUrl';
+        } else {
+          // For iOS simulator, use localhost
+          fullUrl = 'http://localhost:8000$fileUrl';
+        }
+      }
+      
+      print('Full file URL: $fullUrl');
+      
+      final Uri url = Uri.parse(fullUrl);
+      print('Parsed URI: $url');
+      
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Opening file in browser...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      final canLaunch = await canLaunchUrl(url);
+      print('Can launch URL: $canLaunch');
+      
+      if (canLaunch) {
+        await launchUrl(url, mode: LaunchMode.inAppWebView);
       } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open file')),
-          );
+        // Try alternative launch modes
+        try {
+          await launchUrl(url, mode: LaunchMode.inAppWebView);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File opened successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e2) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File download not available in emulator. Try on a real device.'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
+      print('Download error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error downloading file: $e')),
