@@ -61,7 +61,9 @@ class AdminProvider with ChangeNotifier {
   Future<void> loadAnalytics() async {
     _setLoading(true);
     try {
+      print('[DEBUG] Loading analytics...');
       _analytics = await _apiClient.getSystemAnalytics();
+      print('[DEBUG] Analytics loaded: ${_analytics?.totalUsers} users, ${_analytics?.totalTestResults} tests');
       _error = null;
     } catch (e) {
       _error = e.toString();
