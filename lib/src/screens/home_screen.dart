@@ -7,6 +7,7 @@ import '../models/reminders.dart';
 import '../data/api_client.dart';
 import '../utils/app_theme.dart';
 import 'upload_test_result_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -114,28 +115,52 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          // Logout Menu
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'logout') {
-                await context.read<AuthProvider>().logout();
-                if (context.mounted) {
-                  context.go('/login');
-                }
-              }
+          // Menu with Admin option
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final user = authProvider.currentUser;
+              final isAdmin = user?.userType == 'admin';
+              
+              return PopupMenuButton<String>(
+                onSelected: (value) async {
+                  if (value == 'admin') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AdminDashboardScreen(),
+                      ),
+                    );
+                  } else if (value == 'logout') {
+                    await context.read<AuthProvider>().logout();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (isAdmin)
+                    const PopupMenuItem(
+                      value: 'admin',
+                      child: Row(
+                        children: [
+                          Icon(Icons.admin_panel_settings),
+                          SizedBox(width: 8),
+                          Text('Admin Dashboard'),
+                        ],
+                      ),
+                    ),
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout),
+                        SizedBox(width: 8),
+                        Text('Logout'),
+                      ],
+                    ),
+                  ),
+                ],
+              );
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout),
-                    SizedBox(width: 8),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),

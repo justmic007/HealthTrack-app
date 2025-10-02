@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/users.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
+import '../models/labs.dart';
 import '../utils/network_utils.dart';
 import '../utils/api_exception.dart';
 
@@ -206,6 +207,95 @@ class ApiClient {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete reminder: ${response.body}');
+    }
+  }
+
+  // Admin endpoints
+  Future<List<Lab>> getPendingLabs() async {
+    final url = await baseUrl;
+    final response = await http.get(
+      Uri.parse('$url/auth/admin/labs/pending'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Lab.fromJson(json)).toList();
+    } else {
+      String errorMessage = 'Failed to get pending labs';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<Lab> updateLabStatus(String labId, String status) async {
+    final url = await baseUrl;
+    final response = await http.put(
+      Uri.parse('$url/auth/admin/labs/$labId/status'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'status': status}),
+    );
+
+    if (response.statusCode == 200) {
+      return Lab.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Failed to update lab status';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<List<User>> getInactiveUsers() async {
+    final url = await baseUrl;
+    final response = await http.get(
+      Uri.parse('$url/auth/admin/users/inactive'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromJson(json)).toList();
+    } else {
+      String errorMessage = 'Failed to get inactive users';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<User> updateUserStatus(String userId, bool isActive) async {
+    final url = await baseUrl;
+    final response = await http.put(
+      Uri.parse('$url/auth/admin/users/$userId/status'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'is_active': isActive}),
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Failed to update user status';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
     }
   }
 
