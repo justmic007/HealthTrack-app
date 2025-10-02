@@ -5,9 +5,11 @@ import '../providers/auth_provider.dart';
 import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../data/api_client.dart';
+import 'test_result_detail_screen.dart';
 import '../utils/app_theme.dart';
 import 'upload_test_result_screen.dart';
 import 'admin_dashboard_screen.dart';
+import 'test_results_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -268,11 +270,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Your Recent Test Results
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Your Recent Test Results',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Your Recent Test Results',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TestResultsListScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('View All'),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -305,82 +323,93 @@ class _HomeScreenState extends State<HomeScreen> {
                           : Column(
                               children: _recentTests.map((test) => Card(
                                 margin: const EdgeInsets.only(bottom: 12),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Row(
-                                    children: [
-                                      // Test Type Icon
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: _getTestTypeColor(test.title),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          _getTestTypeIcon(test.title),
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TestResultDetailScreen(testResult: test),
                                       ),
-                                      const SizedBox(width: 16),
-                                      // Test Details
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        // Test Type Icon
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: _getTestTypeColor(test.title),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            _getTestTypeIcon(test.title),
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        // Test Details
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                test.title,
+                                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                _formatDate(test.dateTaken),
+                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                  color: AppTheme.darkGrey.withOpacity(0.7),
+                                                ),
+                                              ),
+                                              Text(
+                                                test.labName ?? 'Lab Provider',
+                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                  color: AppTheme.darkGrey.withOpacity(0.7),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Status and Result
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
-                                            Text(
-                                              test.title,
-                                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                fontWeight: FontWeight.w600,
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.getStatusColor(test.status),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                test.status,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              _formatDate(test.dateTaken),
+                                              _getResultValue(test.status),
                                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: AppTheme.darkGrey.withOpacity(0.7),
-                                              ),
-                                            ),
-                                            Text(
-                                              test.labName ?? 'Lab Provider',
-                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: AppTheme.darkGrey.withOpacity(0.7),
+                                                fontWeight: FontWeight.w500,
+                                                color: AppTheme.getStatusColor(test.status),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      // Status and Result
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.getStatusColor(test.status),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              test.status,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _getResultValue(test.status),
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: AppTheme.getStatusColor(test.status),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               )).toList(),
