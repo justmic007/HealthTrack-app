@@ -209,6 +209,80 @@ class ApiClient {
     }
   }
 
+  // Test Results upload endpoint
+  Future<TestResult> uploadTestResult(TestResultCreate testData, {File? file}) async {
+    final url = await baseUrl;
+    
+    if (file != null) {
+      // Multipart request for file upload
+      final request = http.MultipartRequest('POST', Uri.parse('$url/test-results'));
+      
+      // Add headers
+      final token = _token ?? await _getStoredToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      
+      // Add form fields
+      request.fields['patient_email'] = testData.patientEmail;
+      request.fields['title'] = testData.title;
+      request.fields['date_taken'] = testData.dateTaken.toUtc().toIso8601String();
+      request.fields['status'] = testData.status;
+      request.fields['summary_text'] = testData.summaryText;
+      
+      // Debug logging
+      print('Sending multipart request with fields:');
+      print('patient_email: ${testData.patientEmail}');
+      print('title: ${testData.title}');
+      print('date_taken: ${testData.dateTaken.toUtc().toIso8601String()}');
+      print('status: ${testData.status}');
+      print('summary_text: ${testData.summaryText}');
+      print('file: ${file.path}');
+      
+      // Add file
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      print('Upload response status: ${response.statusCode}');
+      print('Upload response body: ${response.body}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return TestResult.fromJson(jsonDecode(response.body));
+      } else {
+        String errorMessage = 'Upload failed';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['detail'] != null) {
+            errorMessage = errorData['detail'];
+          }
+        } catch (e) {}
+        throw ApiException(errorMessage, statusCode: response.statusCode);
+      }
+    } else {
+      // Regular JSON request without file
+      final response = await http.post(
+        Uri.parse('$url/test-results'),
+        headers: await _getHeaders(),
+        body: jsonEncode(testData.toJson()),
+      );
+
+      if (response.statusCode == 201) {
+        return TestResult.fromJson(jsonDecode(response.body));
+      } else {
+        String errorMessage = 'Upload failed';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['detail'] != null) {
+            errorMessage = errorData['detail'];
+          }
+        } catch (e) {}
+        throw ApiException(errorMessage, statusCode: response.statusCode);
+      }
+    }
+  }
+
   // Helper methods
   Future<Map<String, String>> _getHeaders() async {
     final token = _token ?? await _getStoredToken();

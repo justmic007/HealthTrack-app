@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/test_results.dart';
 import '../data/api_client.dart';
@@ -41,6 +42,24 @@ class TestResultsProvider extends ChangeNotifier {
   // Refresh test results
   Future<void> refreshTestResults() async {
     await loadTestResults();
+  }
+
+  // Upload new test result (Lab users only)
+  Future<TestResult> uploadTestResult(TestResultCreate testData, {File? file}) async {
+    _clearError();
+
+    try {
+      final newTestResult = await _apiClient.uploadTestResult(testData, file: file);
+      
+      // Add to local list and refresh
+      _testResults.insert(0, newTestResult);
+      notifyListeners();
+      
+      return newTestResult;
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    }
   }
 
   // Helper methods

@@ -74,29 +74,38 @@ flutter run -d "iPhone 14 Pro Max"
 
 #### 🚀 Both Platforms Simultaneously
 
-**Step 1: Start Both Emulators**
+**Step 1: Stop Any Running Emulators**
 ```bash
+# Stop Flutter processes
+pkill -f "flutter run"
+
+# Stop Android emulator
+adb emu kill
+
+# Stop iOS Simulator
+xcrun simctl shutdown all
+```
+
+**Step 2: Start Both Emulators**
+```bash
+# Start Android emulator in background
+flutter emulators --launch Pixel_6 &
+
 # Start iOS Simulator
 open -a Simulator
-
-# Start Android Emulator
-flutter emulators --launch Pixel_6
-
-# Wait for both to fully load (30-60 seconds)
 ```
 
-**Step 2: Check Available Devices**
+**Step 3: Verify Devices and Run**
 ```bash
+# Check available devices
 flutter devices
-```
-You should see both iOS and Android devices listed.
 
-**Step 3: Run on Both**
-```bash
-# Option 1: Run on all devices
+# Run on all devices simultaneously
 flutter run -d all
+```
 
-# Option 2: Run on specific devices in separate terminals
+**Alternative: Run on Specific Devices**
+```bash
 # Terminal 1:
 flutter run -d ios
 
