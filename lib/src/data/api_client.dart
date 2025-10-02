@@ -7,6 +7,7 @@ import '../models/test_results.dart';
 import '../models/reminders.dart';
 import '../models/labs.dart';
 import '../models/analytics.dart';
+import '../models/shares.dart';
 import '../utils/network_utils.dart';
 import '../utils/api_exception.dart';
 
@@ -97,6 +98,50 @@ class ApiClient {
       } catch (e) {
         // If JSON parsing fails, use default message
       }
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<User> registerPatient(PatientCreate patientData) async {
+    final url = await baseUrl;
+    final response = await http.post(
+      Uri.parse('$url/auth/register/patient'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(patientData.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Patient registration failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<User> registerCaregiver(CaregiverCreate caregiverData) async {
+    final url = await baseUrl;
+    final response = await http.post(
+      Uri.parse('$url/auth/register/caregiver'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(caregiverData.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Caregiver registration failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
       throw ApiException(errorMessage, statusCode: response.statusCode);
     }
   }
@@ -300,6 +345,50 @@ class ApiClient {
     }
   }
 
+  Future<User> verifyCaregiverLicense(String userId) async {
+    final url = await baseUrl;
+    final response = await http.put(
+      Uri.parse('$url/auth/admin/caregivers/$userId/verify-license'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'license_verified': true}),
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Failed to verify caregiver license';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<Map<String, dynamic>> registerLab(LabRegistrationRequest labData) async {
+    final url = await baseUrl;
+    final response = await http.post(
+      Uri.parse('$url/auth/register/lab'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(labData.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      String errorMessage = 'Lab registration failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
   Future<SystemAnalytics> getSystemAnalytics() async {
     final url = await baseUrl;
     final response = await http.get(
@@ -412,6 +501,70 @@ class ApiClient {
   Future<String?> _getStoredToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
+  }
+
+  // Sharing methods
+  Future<Share> shareTestResult(ShareCreate shareData) async {
+    final url = await baseUrl;
+    final response = await http.post(
+      Uri.parse('$url/sharing'),
+      headers: await _getHeaders(),
+      body: jsonEncode(shareData.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return Share.fromJson(jsonDecode(response.body));
+    } else {
+      String errorMessage = 'Failed to share test result';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<List<TestResult>> getSharedResults() async {
+    final url = await baseUrl;
+    final response = await http.get(
+      Uri.parse('$url/sharing/shared-with-me'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => TestResult.fromJson(json)).toList();
+    } else {
+      String errorMessage = 'Failed to get shared results';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
+  }
+
+  Future<void> revokeShare(String shareId) async {
+    final url = await baseUrl;
+    final response = await http.delete(
+      Uri.parse('$url/sharing/$shareId'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode != 200) {
+      String errorMessage = 'Failed to revoke share';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['detail'] != null) {
+          errorMessage = errorData['detail'];
+        }
+      } catch (e) {}
+      throw ApiException(errorMessage, statusCode: response.statusCode);
+    }
   }
 
   Future<void> logout() async {

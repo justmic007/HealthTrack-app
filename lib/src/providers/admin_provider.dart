@@ -103,7 +103,17 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> activateUser(String userId) async {
     try {
-      await _apiClient.updateUserStatus(userId, true);
+      // Find the user to check if they're a caregiver
+      final user = _inactiveUsers.firstWhere((u) => u.id == userId);
+      
+      if (user.userType.toLowerCase() == 'caregiver') {
+        // Use caregiver license verification endpoint
+        await _apiClient.verifyCaregiverLicense(userId);
+      } else {
+        // Use general user activation for other user types
+        await _apiClient.updateUserStatus(userId, true);
+      }
+      
       // Remove from inactive list
       _inactiveUsers.removeWhere((user) => user.id == userId);
       notifyListeners();
