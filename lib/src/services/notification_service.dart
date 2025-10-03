@@ -10,47 +10,42 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
-    // Initialize timezone data
-    tz.initializeTimeZones();
+    try {
+      // Initialize timezone
+      tz.initializeTimeZones();
 
-    // Android initialization settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    // iOS initialization settings
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+      // Android initialization
+      const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+      // iOS initialization
+      const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
+      const InitializationSettings settings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    // Request permissions for iOS
-    await _requestPermissions();
+      await _notifications.initialize(settings);
+
+      // Request permissions for Android 13+
+      await _requestPermissions();
+      
+      print('✅ NotificationService initialized successfully');
+    } catch (e) {
+      print('⚠️ NotificationService initialization error: $e');
+      rethrow;
+    }
   }
 
   Future<void> _requestPermissions() async {
-    await _notifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  }
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-  void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap
-    print('Notification tapped: ${response.payload}');
-    // TODO: Navigate to appropriate screen based on payload
+    await androidImplementation?.requestNotificationsPermission();
   }
 
   Future<void> scheduleReminder({
@@ -60,22 +55,21 @@ class NotificationService {
     required DateTime scheduledDate,
     String? payload,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'reminders',
       'Health Reminders',
-      channelDescription: 'Notifications for health reminders',
+      channelDescription: 'Notifications for health reminders and medications',
       importance: Importance.high,
       priority: Priority.high,
-      showWhen: true,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
 
-    const notificationDetails = NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -85,22 +79,22 @@ class NotificationService {
       title,
       body,
       tz.TZDateTime.from(scheduledDate, tz.local),
-      notificationDetails,
-      payload: payload,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+      payload: payload,
     );
+
+    print('✅ Notification scheduled: "$title" at $scheduledDate');
   }
 
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
+    print('❌ Notification $id cancelled');
   }
 
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
-  }
-
-  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
-    return await _notifications.pendingNotificationRequests();
+    print('🗑️ All notifications cancelled');
   }
 }

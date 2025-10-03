@@ -4,13 +4,13 @@ import 'app.dart';
 import 'src/providers/auth_provider.dart';
 import 'src/providers/sharing_provider.dart';
 import 'src/providers/reminder_provider.dart';
-import 'src/services/simple_notification_service.dart';
+import 'src/services/platform_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize notification service
-  await SimpleNotificationService().initialize();
+  // Initialize platform-aware notification service
+  await PlatformNotificationService().initialize();
   
   // Initialize AuthProvider and check authentication status
   final authProvider = AuthProvider();

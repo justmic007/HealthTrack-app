@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/reminders.dart';
 import '../data/api_client.dart';
-import '../services/simple_notification_service.dart';
+import '../services/platform_notification_service.dart';
 
 class ReminderProvider extends ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
@@ -80,7 +80,7 @@ class ReminderProvider extends ChangeNotifier {
       await _apiClient.deleteReminder(id);
       
       // Cancel local notification
-      await SimpleNotificationService().cancelNotification(id.hashCode);
+      await PlatformNotificationService().cancelNotification(id.hashCode);
       
       _reminders.removeWhere((r) => r.id == id);
       notifyListeners();
@@ -125,7 +125,7 @@ class ReminderProvider extends ChangeNotifier {
   // Schedule local notification for reminder
   Future<void> _scheduleNotification(Reminder reminder) async {
     if (reminder.dueDateTime.isAfter(DateTime.now())) {
-      await SimpleNotificationService().scheduleReminder(
+      await PlatformNotificationService().scheduleReminder(
         id: reminder.id.hashCode,
         title: reminder.title,
         body: reminder.description ?? 'Health reminder',
