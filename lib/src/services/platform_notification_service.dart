@@ -10,17 +10,10 @@ class PlatformNotificationService {
   late final dynamic _service;
 
   Future<void> initialize() async {
-    if (Platform.isIOS) {
-      // Use full notifications on iOS
-      _service = NotificationService();
-      await _service.initialize();
-      print('✅ Using full NotificationService on iOS');
-    } else {
-      // Use simple notifications on Android to avoid crashes
-      _service = SimpleNotificationService();
-      await _service.initialize();
-      print('✅ Using SimpleNotificationService on Android');
-    }
+    // Use full notifications on both platforms
+    _service = NotificationService();
+    await _service.initialize();
+    print('✅ Using full NotificationService on ${Platform.isIOS ? 'iOS' : 'Android'}');
   }
 
   Future<void> scheduleReminder({
