@@ -256,6 +256,20 @@ class ApiClient {
     }
   }
 
+  Future<Reminder> markReminderCompleted(String id) async {
+    final url = await baseUrl;
+    final response = await http.post(
+      Uri.parse('$url/reminders/$id/complete'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return Reminder.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to mark reminder as completed: ${response.body}');
+    }
+  }
+
   // Admin endpoints
   Future<List<Lab>> getPendingLabs() async {
     final url = await baseUrl;

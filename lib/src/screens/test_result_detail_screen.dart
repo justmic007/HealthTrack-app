@@ -6,6 +6,7 @@ import '../models/test_results.dart';
 import '../utils/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'share_test_result_screen.dart';
+import 'create_reminder_screen.dart';
 
 class TestResultDetailScreen extends StatelessWidget {
   final TestResult testResult;
@@ -202,8 +203,12 @@ class TestResultDetailScreen extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Set Reminder - Coming Soon!')),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => CreateReminderScreen(
+                            testResult: testResult,
+                          ),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.notifications),

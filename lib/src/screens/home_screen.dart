@@ -12,6 +12,8 @@ import 'admin_dashboard_screen.dart';
 import 'test_results_list_screen.dart';
 import 'shared_results_screen.dart';
 import 'my_shares_screen.dart';
+import 'reminders_list_screen.dart';
+import 'create_reminder_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,12 +51,21 @@ class _HomeScreenState extends State<HomeScreen> {
         _recentTests = tests.take(3).toList();
       }
       
-      // Load upcoming reminders (next 3)
+      // Load upcoming reminders (next 3 within 30 days)
       final reminders = await _apiClient.getReminders();
+      final now = DateTime.now();
+      final thirtyDaysFromNow = now.add(const Duration(days: 30));
+      
       _upcomingReminders = reminders
-          .where((r) => r.isActive && !r.isCompleted && r.dueDateTime.isAfter(DateTime.now()))
+          .where((r) => r.isActive && 
+                       !r.isCompleted && 
+                       r.dueDateTime.isAfter(now.subtract(const Duration(hours: 1))) && // Include reminders from 1 hour ago
+                       r.dueDateTime.isBefore(thirtyDaysFromNow))
           .take(3)
           .toList();
+      
+      // Sort by due date (earliest first)
+      _upcomingReminders.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
     } catch (e) {
       // Handle errors silently for dashboard
     }
@@ -216,17 +227,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Welcome ${_getFirstTwoNames(user?.fullName)}!',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.darkGrey,
+                      Flexible(
+                        flex: 2,
+                        child: Text(
+                          'Welcome ${_getFirstTwoNames(user?.fullName)}!',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.darkGrey,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        _getCurrentDate(),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.darkGrey.withOpacity(0.7),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          _getCurrentDate(),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.darkGrey.withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.end,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -454,11 +475,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Upcoming Reminders
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Upcoming Reminders',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Upcoming Reminders',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RemindersListScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('View All'),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -483,15 +520,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : Column(
                           children: _upcomingReminders.map((reminder) => Card(
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                               leading: CircleAvatar(
+                                radius: 16,
                                 backgroundColor: AppTheme.getReminderTypeColor(reminder.reminderType),
-                                child: Icon(_getReminderIcon(reminder.reminderType), color: Colors.white, size: 20),
+                                child: Icon(_getReminderIcon(reminder.reminderType), color: Colors.white, size: 16),
                               ),
-                              title: Text(reminder.title),
-                              subtitle: Text('${reminder.description ?? ''} • ${_formatDateTime(reminder.dueDateTime)}'),
-                              trailing: const Icon(Icons.chevron_right),
+                              title: Text(
+                                reminder.title,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${reminder.description ?? ''} • ${_formatDateTime(reminder.dueDateTime)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              trailing: const Icon(Icons.chevron_right, size: 20),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const RemindersListScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           )).toList(),
                         ),
@@ -505,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, authProvider, child) {
           final user = authProvider.currentUser;
           
-          // Only show upload button for active lab users
+          // Show upload button for active lab users
           if (user?.userType == 'lab' && user?.isActive == true) {
             return FloatingActionButton.extended(
               onPressed: () {
@@ -522,7 +578,19 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
           
-          return const SizedBox.shrink();
+          // Show reminder button for other users
+          return FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CreateReminderScreen(),
+                ),
+              );
+            },
+            backgroundColor: AppTheme.softPurple,
+            foregroundColor: Colors.white,
+            child: const Icon(Icons.add_alarm),
+          );
         },
       ),
     );
