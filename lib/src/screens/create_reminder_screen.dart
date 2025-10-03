@@ -4,6 +4,7 @@ import '../providers/reminder_provider.dart';
 import '../models/reminders.dart';
 import '../models/test_results.dart';
 import '../utils/app_theme.dart';
+import '../widgets/exact_alarm_permission_dialog.dart';
 
 class CreateReminderScreen extends StatefulWidget {
   final TestResult? testResult;
@@ -263,9 +264,19 @@ class _CreateReminderScreenState extends State<CreateReminderScreen> {
         testResultId: widget.testResult?.id,
       );
 
-      await context.read<ReminderProvider>().createReminder(reminderData);
+      final reminderProvider = context.read<ReminderProvider>();
+      await reminderProvider.createReminder(reminderData);
 
       if (mounted) {
+        // Check if exact alarm permission is needed
+        if (reminderProvider.exactAlarmPermissionNeeded) {
+          await showDialog(
+            context: context,
+            builder: (context) => const ExactAlarmPermissionDialog(),
+          );
+          reminderProvider.clearExactAlarmPermissionFlag();
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Reminder created successfully!')),
         );

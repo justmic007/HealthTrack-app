@@ -45,7 +45,13 @@ class NotificationService {
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-    await androidImplementation?.requestNotificationsPermission();
+    if (androidImplementation != null) {
+      // Request notification permission
+      await androidImplementation.requestNotificationsPermission();
+      
+      // Request exact alarm permission for Android 12+
+      await androidImplementation.requestExactAlarmsPermission();
+    }
   }
 
   Future<void> scheduleReminder({
@@ -74,18 +80,43 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      payload: payload,
-    );
-
-    print('✅ Notification scheduled: "$title" at $scheduledDate');
+    try {
+      // Try exact scheduling first
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+      print('✅ Exact notification scheduled: "$title" at $scheduledDate');
+    } catch (e) {
+      if (e.toString().contains('exact_alarms_not_permitted')) {
+        // Fallback to inexact scheduling
+        try {
+          await _notifications.zonedSchedule(
+            id,
+            title,
+            body,
+            tz.TZDateTime.from(scheduledDate, tz.local),
+            details,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+            payload: payload,
+          );
+          print('⚠️ Inexact notification scheduled: "$title" at $scheduledDate (exact alarms not permitted)');
+        } catch (fallbackError) {
+          print('❌ Failed to schedule notification: $fallbackError');
+          rethrow;
+        }
+      } else {
+        print('❌ Failed to schedule notification: $e');
+        rethrow;
+      }
+    }
   }
 
   Future<void> cancelNotification(int id) async {

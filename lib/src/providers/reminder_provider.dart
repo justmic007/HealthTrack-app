@@ -9,11 +9,13 @@ class ReminderProvider extends ChangeNotifier {
   List<Reminder> _reminders = [];
   bool _isLoading = false;
   String? _errorMessage;
+  bool _exactAlarmPermissionNeeded = false;
 
   // Getters
   List<Reminder> get reminders => _reminders;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get exactAlarmPermissionNeeded => _exactAlarmPermissionNeeded;
 
   // Get upcoming reminders (not completed)
   List<Reminder> get upcomingReminders => _reminders
@@ -125,13 +127,29 @@ class ReminderProvider extends ChangeNotifier {
   // Schedule local notification for reminder
   Future<void> _scheduleNotification(Reminder reminder) async {
     if (reminder.dueDateTime.isAfter(DateTime.now())) {
-      await PlatformNotificationService().scheduleReminder(
-        id: reminder.id.hashCode,
-        title: reminder.title,
-        body: reminder.description ?? 'Health reminder',
-        scheduledDate: reminder.dueDateTime,
-        payload: reminder.id,
-      );
+      try {
+        await PlatformNotificationService().scheduleReminder(
+          id: reminder.id.hashCode,
+          title: reminder.title,
+          body: reminder.description ?? 'Health reminder',
+          scheduledDate: reminder.dueDateTime,
+          payload: reminder.id,
+        );
+      } catch (e) {
+        if (e.toString().contains('exact_alarms_not_permitted')) {
+          _exactAlarmPermissionNeeded = true;
+          notifyListeners();
+          print('⚠️ Exact alarms not permitted - reminder scheduled with approximate timing');
+        } else {
+          print('❌ Failed to schedule notification: $e');
+        }
+      }
     }
+  }
+
+  // Clear exact alarm permission flag
+  void clearExactAlarmPermissionFlag() {
+    _exactAlarmPermissionNeeded = false;
+    notifyListeners();
   }
 }
