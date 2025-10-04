@@ -3,6 +3,7 @@ file_picker=/Users/micah/.pub-cache/hosted/pub.dev/file_picker-6.2.1/
 flutter_local_notifications=/Users/micah/.pub-cache/hosted/pub.dev/flutter_local_notifications-17.2.4/
 flutter_local_notifications_linux=/Users/micah/.pub-cache/hosted/pub.dev/flutter_local_notifications_linux-4.0.1/
 flutter_plugin_android_lifecycle=/Users/micah/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.18/
+integration_test=/Users/micah/development/flutter/packages/integration_test/
 path_provider_linux=/Users/micah/.pub-cache/hosted/pub.dev/path_provider_linux-2.2.1/
 path_provider_windows=/Users/micah/.pub-cache/hosted/pub.dev/path_provider_windows-2.2.1/
 shared_preferences=/Users/micah/.pub-cache/hosted/pub.dev/shared_preferences-2.2.3/
