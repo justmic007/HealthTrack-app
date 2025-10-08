@@ -31,6 +31,9 @@ class NotificationService {
 
       await _notifications.initialize(settings);
 
+      // Create notification channel for Android
+      await _createNotificationChannel();
+
       // Request permissions for Android 13+
       await _requestPermissions();
       
@@ -41,16 +44,37 @@ class NotificationService {
     }
   }
 
+  Future<void> _createNotificationChannel() async {
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'reminders',
+        'Health Reminders',
+        description: 'Notifications for health reminders and medications',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
+      
+      await androidImplementation.createNotificationChannel(channel);
+      print('🔔 Notification channel created: ${channel.id}');
+    }
+  }
+
   Future<void> _requestPermissions() async {
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation != null) {
       // Request notification permission
-      await androidImplementation.requestNotificationsPermission();
+      final notificationPermission = await androidImplementation.requestNotificationsPermission();
+      print('🔔 Notification permission: $notificationPermission');
       
       // Request exact alarm permission for Android 12+
-      await androidImplementation.requestExactAlarmsPermission();
+      final exactAlarmPermission = await androidImplementation.requestExactAlarmsPermission();
+      print('⏰ Exact alarm permission: $exactAlarmPermission');
     }
   }
 
@@ -120,12 +144,22 @@ class NotificationService {
   }
 
   Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
-    print('❌ Notification $id cancelled');
+    try {
+      await _notifications.cancel(id);
+      print('❌ Notification $id cancelled');
+    } catch (e) {
+      // Ignore cancellation errors - notification might not exist
+      print('⚠️ Could not cancel notification $id: ${e.toString()}');
+    }
   }
 
   Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
-    print('🗑️ All notifications cancelled');
+    try {
+      await _notifications.cancelAll();
+      print('🗑️ All notifications cancelled');
+    } catch (e) {
+      // Ignore cancellation errors
+      print('⚠️ Could not cancel all notifications: ${e.toString()}');
+    }
   }
 }

@@ -25,6 +25,7 @@ class MyApp extends StatelessWidget {
             title: 'HealthTrack',
             theme: AppTheme.lightTheme,
             routerConfig: router,
+            debugShowCheckedModeBanner: false,
           );
         },
       ),
