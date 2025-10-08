@@ -81,8 +81,13 @@ class ReminderProvider extends ChangeNotifier {
     try {
       await _apiClient.deleteReminder(id);
       
-      // Cancel local notification
-      await PlatformNotificationService().cancelNotification(id.hashCode);
+      // Cancel local notification (ignore errors)
+      try {
+        await PlatformNotificationService().cancelNotification(id.hashCode);
+      } catch (notificationError) {
+        print('⚠️ Could not cancel notification for reminder $id: $notificationError');
+        // Continue with deletion even if notification cancellation fails
+      }
       
       _reminders.removeWhere((r) => r.id == id);
       notifyListeners();
@@ -126,7 +131,15 @@ class ReminderProvider extends ChangeNotifier {
 
   // Schedule local notification for reminder
   Future<void> _scheduleNotification(Reminder reminder) async {
-    if (reminder.dueDateTime.isAfter(DateTime.now())) {
+    final now = DateTime.now();
+    print('🔔 Scheduling notification:');
+    print('   Title: ${reminder.title}');
+    print('   Due: ${reminder.dueDateTime}');
+    print('   Now: $now');
+    print('   Is future: ${reminder.dueDateTime.isAfter(now)}');
+    print('   ID: ${reminder.id.hashCode}');
+    
+    if (reminder.dueDateTime.isAfter(now)) {
       try {
         await PlatformNotificationService().scheduleReminder(
           id: reminder.id.hashCode,
@@ -135,6 +148,7 @@ class ReminderProvider extends ChangeNotifier {
           scheduledDate: reminder.dueDateTime,
           payload: reminder.id,
         );
+        print('✅ Notification scheduled successfully');
       } catch (e) {
         if (e.toString().contains('exact_alarms_not_permitted')) {
           _exactAlarmPermissionNeeded = true;
@@ -144,6 +158,8 @@ class ReminderProvider extends ChangeNotifier {
           print('❌ Failed to schedule notification: $e');
         }
       }
+    } else {
+      print('⚠️ Reminder time is in the past - not scheduling notification');
     }
   }
 
@@ -151,5 +167,22 @@ class ReminderProvider extends ChangeNotifier {
   void clearExactAlarmPermissionFlag() {
     _exactAlarmPermissionNeeded = false;
     notifyListeners();
+  }
+
+  // Test notification (for debugging)
+  Future<void> testNotification() async {
+    try {
+      final testTime = DateTime.now().add(const Duration(seconds: 10));
+      await PlatformNotificationService().scheduleReminder(
+        id: 99999,
+        title: 'Test Notification',
+        body: 'This is a test notification in 10 seconds',
+        scheduledDate: testTime,
+        payload: 'test',
+      );
+      print('📢 Test notification scheduled for $testTime');
+    } catch (e) {
+      print('❌ Test notification failed: $e');
+    }
   }
 }
