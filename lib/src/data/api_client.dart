@@ -15,27 +15,48 @@ class ApiClient {
   // Environment-based configuration
   static const bool _isProduction = bool.fromEnvironment('dart.vm.product');
   static String? _cachedBaseUrl;
+  static const String _productionUrl = 'https://healthtrack-api.onrender.com/api/v1';
   
   static Future<String> get baseUrl async {
     if (_isProduction) {
-      // Production API URL - replace with your actual domain
-      return 'https://api.healthtrack.com/api/v1';
+      return _productionUrl;
     } else {
       // Cache the URL to avoid repeated network calls
       if (_cachedBaseUrl != null) return _cachedBaseUrl!;
       
-      // Development URLs
+      // Try local development first, fallback to production
+      String localUrl;
       if (Platform.isAndroid) {
-        _cachedBaseUrl = 'http://10.0.2.2:8000/api/v1';  // Android emulator
+        localUrl = 'http://10.0.2.2:8000/api/v1';
       } else if (Platform.isIOS) {
-        // Dynamically get local IP for iOS simulator
         final localIP = await NetworkUtils.getLocalIP();
-        _cachedBaseUrl = 'http://$localIP:8000/api/v1';
+        localUrl = 'http://$localIP:8000/api/v1';
       } else {
-        _cachedBaseUrl = 'http://localhost:8000/api/v1';  // Fallback
+        localUrl = 'http://localhost:8000/api/v1';
+      }
+      
+      // Test if local API is available
+      if (await _isApiAvailable(localUrl)) {
+        print('✅ Using local development API: $localUrl');
+        _cachedBaseUrl = localUrl;
+      } else {
+        print('⚠️ Local API unavailable, falling back to production: $_productionUrl');
+        _cachedBaseUrl = _productionUrl;
       }
       
       return _cachedBaseUrl!;
+    }
+  }
+  
+  static Future<bool> _isApiAvailable(String baseUrl) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/../health'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 3));
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
   String? _token;
